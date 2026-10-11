@@ -101,18 +101,3 @@ python evaluate.py --batch-size 180 --dataset Custom --custom_test_dataset_path 
 ## Evaluation Metrics
 
 Accuracy, macro precision, macro recall, macro F1-score, weighted F1-score, ROC-AUC, Cohen's Kappa, and confusion matrix.
-
-## References
-
-- [SiT: Self-supervised Vision Transformer](https://arxiv.org/abs/2104.03602)
-- [Compact Convolutional Transformers](https://arxiv.org/abs/2104.05704)
-- [Original SiT Repository](https://github.com/Sara-Ahmed/SiT)
-- [Compact Transformers Repository](https://github.com/SHI-Labs/Compact-Transformers)
-
-## Acknowledgments
-
-Built upon the original SiT framework and Compact Convolutional Transformer architecture, adapted for self-supervised histopathology image representation learning.
-
-## License
-
-Refer to the original repository's license and applicable dataset licenses for usage and redistribution terms.

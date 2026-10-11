@@ -1,5 +1,4 @@
-# Histopathology Image Classification using Compact Self-Supervised Vision Transformers (cSiT)
-
+# Histopathology Image Classification
 A PyTorch implementation of **self-supervised pretraining, fine-tuning, and evaluation** for histopathology image classification using a Compact Convolutional Transformer (CCT) backbone.
 
 The model extends the Self-supervised Vision Transformer (SiT) framework with a more efficient transformer architecture to learn meaningful representations from unlabeled histopathology images.

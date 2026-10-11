@@ -1,104 +1,99 @@
-# Histopathology Image Classification
+# Compact-SiT (cSiT)
 
-A PyTorch-based self-supervised learning framework for histopathology image classification using a **Compact Convolutional Transformer (CCT)** backbone. The model combines three self-supervised learning objectives to learn robust visual representations from unlabeled medical images.
+PyTorch code for self-supervised pretraining, fine-tuning, and evaluation of a **compact self-supervised vision transformer** for histopathology image classification. It adapts [SiT](https://github.com/Sara-Ahmed/SiT) with a **CCT-14/7×2** backbone (~6M parameters, vs. ~86M for ViT-Base).
 
-## Key Features
+## Method
 
-- **Self-Supervised Learning:** Reconstruction, rotation prediction, and contrastive learning.
-- **Compact Architecture:** Modified CCT-14/7×2 with approximately 6M parameters.
-- **Large-Scale Pretraining:** Approximately 600K unlabeled histopathology images.
-- **Benchmark Evaluation:** NCT-CRC and BreakHis datasets.
-- **Training Modes:** Pretraining, fine-tuning, linear evaluation, and semi-supervised learning.
+Pretrained on ~600K unlabeled histopathology images (PatchCamelyon, ICIAR 2018, TUPAC 2016, and others) with three pretext tasks:
 
-## Methodology
+1. **Reconstruction:** restore the original image from a corrupted one (random drop/replace, color distortion, blur, grayscale)
+2. **Rotation prediction:** classify 0°, 90°, 180°, 270°
+3. **Contrastive learning:** learn embeddings invariant across augmented views
 
-The framework uses three pretext tasks:
-
-1. **Image Reconstruction:** Reconstructs original images from corrupted inputs.
-2. **Rotation Prediction:** Predicts rotations of 0°, 90°, 180°, and 270°.
-3. **Contrastive Learning:** Learns discriminative representations from augmented image pairs.
-
-The pretrained CCT backbone is fine-tuned for downstream histopathology classification tasks.
-
-## Datasets
-
-**Pretraining:** Approximately 600K unlabeled images collected from public histopathology datasets, including PatchCamelyon, ICIAR 2018, and TUPAC 2016.
-
-**Classification:**
-- [NCT-CRC-HE-100K](https://zenodo.org/record/1214456) — Colorectal tissue histopathology.
-- [BreakHis](https://web.inf.ufpr.br/vri/databases/breast-cancer-histopathological-database-breakhis/) — Breast cancer histopathology.
-
+The pretrained model is then evaluated on [NCT-CRC-HE-100K](https://zenodo.org/record/1214456) and [BreakHis](https://web.inf.ufpr.br/vri/databases/breast-cancer-histopathological-database-breakhis/), including a semi-supervised setting on NCT-CRC.
 
 ## Results
 
-### NCT-CRC Benchmark
+**NCT-CRC**
 
-| Evaluation Mode | Accuracy | Macro F1 | Macro AUC |
+| Mode | Accuracy | Macro F1 | Macro AUC |
 |---|---:|---:|---:|
-| Fine-Tuning | 84% | 78% | 98.0% |
-| SSL + Linear Evaluation | 91% | 86% | 98.5% |
-| **SSL + Fine-Tuning** | **94%** | **91%** | **99.3%** |
+| Fine-tuning (FT) | 0.84 | 0.78 | 0.980 |
+| SSL + Linear Eval (LE) | 0.91 | 0.86 | 0.985 |
+| **SSL + FT** | **0.94** | **0.91** | **0.993** |
 
-### BreakHis Benchmark
+**BreakHis** (5-fold stratified CV, mean)
 
-*5-fold stratified cross-validation.*
-
-| Evaluation Mode | Accuracy | Macro F1 | Weighted F1 |
+| Mode | Accuracy | Macro F1 | Weighted F1 |
 |---|---:|---:|---:|
-| Fine-Tuning | 85.7% | 82.0% | 85.2% |
-| SSL + Linear Evaluation | 84.8% | 81.2% | 84.5% |
-| **SSL + Fine-Tuning** | **93.7%** | **92.8%** | **93.8%** |
+| FT | 0.857 | 0.82 | 0.852 |
+| SSL + LE | 0.848 | 0.812 | 0.845 |
+| **SSL + FT** | **0.937** | **0.928** | **0.938** |
 
-### BreakHis Magnification Analysis
+**BreakHis by magnification:** 40× 93.78 · 100× 93.12 · 200× 94.28 · 400× 94.39 · **mean 93.89**
 
-| Magnification | Accuracy |
-|---|---:|
-| 40× | 93.78% |
-| 100× | 93.12% |
-| 200× | 94.28% |
-| 400× | 94.39% |
-| **Mean** | **93.89%** |
+**Comparison with other SSL methods (Macro F1)**
 
-*Results are based on the reported project experiments.*
+| Model | NCT-CRC | BreakHis | Backbone |
+|---|---:|---:|---|
+| Autoencoder | 37.0 | 36.0 | ResNet50 |
+| Colorization | 80.2 | 72.4 | ResNet50 |
+| CPCv2 | 80.1 | 71.1 | ResNet50 |
+| SSL Contrastive | 86.2 | 78.2 | ResNet50 |
+| SSL Contrastive (best) | 91.4 | 80.2 | ResNet34 |
+| **cSiT** | **93.0** | **92.8** | CCT |
 
-## Installation
+## Setup
 
 ```bash
 git clone https://github.com/alibalapour/Compact-SiT.git
 cd Compact-SiT
 pip install --upgrade -r requirements.txt
+gdown --id 1BqoJ_IJWjOwqueCZstch-XQERcUto3dt   # pretrained model (600k, 30 epochs)
 ```
 
-## Pretrained Model
+## Usage
 
-Download the pretrained checkpoint:
-
-```bash
-gdown --id 1BqoJ_IJWjOwqueCZstch-XQERcUto3dt
-```
-
-## Training
-
-### Self-Supervised Pretraining
+### Self-supervised pretraining
 
 ```bash
 python main.py --batch-size 72 --epochs 10 --min-lr 5e-6 --lr 1e-4 --training-mode SSL --dataset UH_main --output output --validate-every 1
 ```
 
-### Fine-Tuning on NCT-CRC
+### Fine-tuning
+
+Prepared dataset:
 
 ```bash
-python main.py --batch-size 120 --epochs 50 --min-lr 5e-6 --training-mode finetune --dataset NCT --finetune "path/to/pretrained_model" --output output --validate-every 1
+python main.py --batch-size 120 --epochs 50 --min-lr 5e-6 --training-mode finetune --dataset NCT --finetune <path/to/pretrained_model> --output output --validate-every 1
 ```
 
-### Model Evaluation
+Custom dataset:
 
 ```bash
-python evaluate.py --batch-size 180 --dataset Custom --custom_test_dataset_path "path/to/test_dataset" --model-path "path/to/finetuned_model"
+python main.py --batch-size 120 --epochs 50 --min-lr 5e-6 --training-mode finetune --dataset Custom --custom_train_dataset_path <path/to/train_dataset> --custom_val_dataset_path <path/to/val_dataset> --finetune output/checkpoint.pth --output output --validate-every 1
 ```
 
-**Note:** Update dataset paths and checkpoint locations according to your environment. See the repository's argument definitions for linear evaluation and custom dataset configuration.
+### Linear evaluation
 
-## Evaluation Metrics
+Linear head:
 
-Accuracy, macro precision, macro recall, macro F1-score, weighted F1-score, ROC-AUC, Cohen's Kappa, and confusion matrix.
+```bash
+python main.py --batch-size 120 --epochs 50 --min-lr 5e-6 --training-mode finetune --dataset NCT --finetune <path/to/pretrained_model> --output output --validate-every 1 --SiT_LinearEvaluation 1
+```
+
+2-layer MLP head:
+
+```bash
+python main.py --batch-size 120 --epochs 10 --lr 1e-3 --weight-decay 5e-4 --min-lr 5e-6 --training-mode finetune --dataset NCT --finetune <path/to/pretrained_model> --output output --validate-every 1 --SiT_LinearEvaluation 1 --representation-size 1024
+```
+
+> Set `--dataset_location` to the path of your downloaded dataset.
+
+### Evaluation
+
+```bash
+python evaluate.py --batch-size 180 --dataset Custom --custom_test_dataset_path <path/to/test_dataset> --model-path <path/to/finetuned_model>
+```
+
+Reported metrics: accuracy, macro precision/recall/F1, weighted F1, ROC-AUC, Cohen's Kappa, and confusion matrix.

@@ -106,12 +106,6 @@ python evaluate.py
 - OpenCV
 - Scikit-learn
 
-## References
-
-- [Compact-SiT GitHub Repository](https://github.com/alibalapour/Compact-SiT)
-- NCT-CRC-HE-100K dataset
-- BreakHis dataset
-
 ## License
 
 Refer to the repository for licensing details and conditions of use.

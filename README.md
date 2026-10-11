@@ -1,4 +1,4 @@
-# Histopathology Image Classification using cSiT
+# Histopathology Image Classification
 
 A PyTorch-based self-supervised learning framework for histopathology image classification using a **Compact Convolutional Transformer (CCT)** backbone. The model combines three self-supervised learning objectives to learn robust visual representations from unlabeled medical images.
 

@@ -28,6 +28,9 @@ The pretrained CCT backbone is fine-tuned for downstream histopathology classifi
 - [NCT-CRC-HE-100K](https://zenodo.org/record/1214456) — Colorectal tissue histopathology.
 - [BreakHis](https://web.inf.ufpr.br/vri/databases/breast-cancer-histopathological-database-breakhis/) — Breast cancer histopathology.
 
+![Uploading image.png…]()
+
+
 ## Results
 
 ### NCT-CRC Benchmark

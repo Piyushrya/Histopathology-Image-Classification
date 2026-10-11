@@ -1,4 +1,4 @@
-# Compact Self-Supervised Vision Transformer for Histopathology Classification
+# Histopathology Image Classification 
 
 A self-supervised learning framework for histopathology image classification using a Compact Convolutional Transformer (CCT). The model learns visual representations from unlabeled medical images using reconstruction, rotation prediction, and contrastive learning, reducing reliance on labeled data.
 

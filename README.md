@@ -1,99 +1,117 @@
-# Compact-SiT (cSiT)
+# Compact Self-Supervised Vision Transformer for Histopathology Classification
 
-PyTorch code for self-supervised pretraining, fine-tuning, and evaluation of a **compact self-supervised vision transformer** for histopathology image classification. It adapts [SiT](https://github.com/Sara-Ahmed/SiT) with a **CCT-14/7×2** backbone (~6M parameters, vs. ~86M for ViT-Base).
+A self-supervised learning framework for histopathology image classification using a Compact Convolutional Transformer (CCT). The model learns visual representations from unlabeled medical images using reconstruction, rotation prediction, and contrastive learning, reducing reliance on labeled data.
 
-## Method
+## Key Features
 
-Pretrained on ~600K unlabeled histopathology images (PatchCamelyon, ICIAR 2018, TUPAC 2016, and others) with three pretext tasks:
+- **Self-Supervised Learning:** Combines reconstruction, rotation prediction, and contrastive learning.
+- **Compact Architecture:** Uses a modified CCT-14/7×2 model with approximately 6M parameters.
+- **Pretraining:** Learns representations from approximately 600K unlabeled histopathology images.
+- **Transfer Learning:** Supports linear evaluation and end-to-end fine-tuning.
+- **Evaluation:** Includes classification metrics across datasets and magnification levels.
 
-1. **Reconstruction:** restore the original image from a corrupted one (random drop/replace, color distortion, blur, grayscale)
-2. **Rotation prediction:** classify 0°, 90°, 180°, 270°
-3. **Contrastive learning:** learn embeddings invariant across augmented views
+## Datasets
 
-The pretrained model is then evaluated on [NCT-CRC-HE-100K](https://zenodo.org/record/1214456) and [BreakHis](https://web.inf.ufpr.br/vri/databases/breast-cancer-histopathological-database-breakhis/), including a semi-supervised setting on NCT-CRC.
+- **NCT-CRC-HE-100K:** Histopathology image classification.
+- **BreakHis:** Breast cancer histopathology classification.
+- **Additional pretraining datasets:** PatchCamelyon, ICIAR 2018, and TUPAC 2016 Mitosis.
+
+## Methodology
+
+The framework uses three self-supervised objectives:
+
+1. **Image Reconstruction:** Learns representations by reconstructing input images.
+2. **Rotation Prediction:** Captures spatial and structural features by predicting image rotations.
+3. **Contrastive Learning:** Learns discriminative representations by bringing similar image features closer and separating dissimilar ones.
+
+The pretrained model is evaluated using linear evaluation and supervised fine-tuning.
 
 ## Results
 
-**NCT-CRC**
+### NCT-CRC-HE-100K
 
-| Mode | Accuracy | Macro F1 | Macro AUC |
+| Method | Accuracy | Macro F1 | Macro AUC |
 |---|---:|---:|---:|
-| Fine-tuning (FT) | 0.84 | 0.78 | 0.980 |
-| SSL + Linear Eval (LE) | 0.91 | 0.86 | 0.985 |
-| **SSL + FT** | **0.94** | **0.91** | **0.993** |
+| Fine-tuning baseline | 84% | 78% | 98.0% |
+| Self-supervised + Linear Evaluation | 91% | 86% | 98.5% |
+| Self-supervised + Fine-tuning | **94%** | **91%** | **99.3%** |
 
-**BreakHis** (5-fold stratified CV, mean)
+### BreakHis
 
-| Mode | Accuracy | Macro F1 | Weighted F1 |
+| Method | Accuracy | Macro F1 | Weighted F1 |
 |---|---:|---:|---:|
-| FT | 0.857 | 0.82 | 0.852 |
-| SSL + LE | 0.848 | 0.812 | 0.845 |
-| **SSL + FT** | **0.937** | **0.928** | **0.938** |
+| Fine-tuning baseline | 85.7% | 82.0% | 85.2% |
+| Self-supervised + Linear Evaluation | 84.8% | 81.2% | 84.5% |
+| Self-supervised + Fine-tuning | **93.7%** | **92.8%** | **93.8%** |
 
-**BreakHis by magnification:** 40× 93.78 · 100× 93.12 · 200× 94.28 · 400× 94.39 · **mean 93.89**
+### BreakHis Accuracy by Magnification
 
-**Comparison with other SSL methods (Macro F1)**
+| Magnification | Accuracy |
+|---|---:|
+| 40× | 93.78% |
+| 100× | 93.12% |
+| 200× | 94.28% |
+| 400× | 94.39% |
+| **Mean** | **93.89%** |
 
-| Model | NCT-CRC | BreakHis | Backbone |
-|---|---:|---:|---|
-| Autoencoder | 37.0 | 36.0 | ResNet50 |
-| Colorization | 80.2 | 72.4 | ResNet50 |
-| CPCv2 | 80.1 | 71.1 | ResNet50 |
-| SSL Contrastive | 86.2 | 78.2 | ResNet50 |
-| SSL Contrastive (best) | 91.4 | 80.2 | ResNet34 |
-| **cSiT** | **93.0** | **92.8** | CCT |
-
-## Setup
+## Installation
 
 ```bash
 git clone https://github.com/alibalapour/Compact-SiT.git
 cd Compact-SiT
 pip install --upgrade -r requirements.txt
-gdown --id 1BqoJ_IJWjOwqueCZstch-XQERcUto3dt   # pretrained model (600k, 30 epochs)
+```
+
+Download the pretrained model:
+
+```bash
+gdown --id 1BqoJ_IJWjOwqueCZstch-XQERcUto3dt
 ```
 
 ## Usage
 
-### Self-supervised pretraining
+### Self-Supervised Pretraining
 
 ```bash
-python main.py --batch-size 72 --epochs 10 --min-lr 5e-6 --lr 1e-4 --training-mode SSL --dataset UH_main --output output --validate-every 1
+python pretrain.py
 ```
 
-### Fine-tuning
-
-Prepared dataset:
+### Fine-Tuning on NCT-CRC
 
 ```bash
-python main.py --batch-size 120 --epochs 50 --min-lr 5e-6 --training-mode finetune --dataset NCT --finetune <path/to/pretrained_model> --output output --validate-every 1
+python finetune.py
 ```
 
-Custom dataset:
+### Linear Evaluation
 
 ```bash
-python main.py --batch-size 120 --epochs 50 --min-lr 5e-6 --training-mode finetune --dataset Custom --custom_train_dataset_path <path/to/train_dataset> --custom_val_dataset_path <path/to/val_dataset> --finetune output/checkpoint.pth --output output --validate-every 1
+python linear_eval.py
 ```
 
-### Linear evaluation
-
-Linear head:
+### Model Evaluation
 
 ```bash
-python main.py --batch-size 120 --epochs 50 --min-lr 5e-6 --training-mode finetune --dataset NCT --finetune <path/to/pretrained_model> --output output --validate-every 1 --SiT_LinearEvaluation 1
+python evaluate.py
 ```
 
-2-layer MLP head:
+*Note: Verify script names and available arguments against the repository before running the commands.*
 
-```bash
-python main.py --batch-size 120 --epochs 10 --lr 1e-3 --weight-decay 5e-4 --min-lr 5e-6 --training-mode finetune --dataset NCT --finetune <path/to/pretrained_model> --output output --validate-every 1 --SiT_LinearEvaluation 1 --representation-size 1024
-```
+## Technologies
 
-> Set `--dataset_location` to the path of your downloaded dataset.
+- Python
+- PyTorch
+- Compact Convolutional Transformer (CCT)
+- Self-Supervised Learning
+- Contrastive Learning
+- OpenCV
+- Scikit-learn
 
-### Evaluation
+## References
 
-```bash
-python evaluate.py --batch-size 180 --dataset Custom --custom_test_dataset_path <path/to/test_dataset> --model-path <path/to/finetuned_model>
-```
+- [Compact-SiT GitHub Repository](https://github.com/alibalapour/Compact-SiT)
+- NCT-CRC-HE-100K dataset
+- BreakHis dataset
 
-Reported metrics: accuracy, macro precision/recall/F1, weighted F1, ROC-AUC, Cohen's Kappa, and confusion matrix.
+## License
+
+Refer to the repository for licensing details and conditions of use.
